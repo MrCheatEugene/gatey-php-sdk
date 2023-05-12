@@ -1,5 +1,6 @@
 # gatey-php-sdk
 PHP version of Gatey SDK.
+Please note that this is not an official Gatey PHP SDK.
 
 # Install
 
