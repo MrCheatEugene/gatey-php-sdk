@@ -58,14 +58,44 @@ class GateySDK
         ),true);
     }
 
+    private function get_context($line,$filename,$line_count=5){
+        $file = preg_split("/\r\n|\n|\r/",file_get_contents($filename));
+        $line_count=$line_count+1;
+        $line=$line-1;
+        $pre=[];
+        $post=[];
+        $target="";
+        $prei=0;
+        $posti=0;
+        foreach($file as $key => $linet){
+            if($line==$key){
+                $target=$linet;
+            }
+            if($prei+1<$line_count and $line - $key <$line_count){
+                array_push($pre, $linet);
+                $prei+=1;
+            }
+            if($posti+1<$line_count and $line+$posti+1 == $key and $target!==$linet){
+                array_push($post, $linet);
+                $posti+=1;
+            }
+        }
+        return ['target'=> $file[$line], 'pre'=> $pre, 'post'=> $post];
+    }
+
     public function capture_message(string $message, string $level="DEBUG", $exception=null):int{
         $exception_json="";
         if(!is_null($exception)){
-            $exception_f=$exception->getMessage()."\nin file: ".$exception->getFile()."\nat line: ".$exception->getLine()."\nError code: ".$exception->getCode()."\n\nTraceback: ".$exception->getTraceAsString();
-            $exception_j=json_encode(['description'=>$exception_f,'class'=>get_class($exception), 'traceback'=> array(), 'variables'=> ['globals'=> new stdClass(), 'locals'=> new stdClass()]]);
+            $traceback=$exception->getTrace();
+            $traceback_f=[];
+            foreach($traceback as $back){
+                array_push($traceback_f, ['filename'=>$back['file'], 'line'=>$back['line'], 'name'=>$back['function'], 'module'=>basename($back['file']),'context'=>$this->get_context($back['line'], $back['file'])]);
+            }
+            $exception_f=$exception->getMessage();
+            $exception_j=json_encode(['description'=>$exception_f,'class'=>get_class($exception), 'traceback'=> $traceback_f, 'variables'=> ['globals'=> new stdClass(), 'locals'=> new stdClass()]]);
             $exception_json="&exception=".urlencode($exception_j);
         }
-        $tags=urlencode(json_encode(["sdk"=> "PHP Gatey SDK","sdk.name"=> 'gatey.php.unofficial', "platform"=> $_SERVER['SERVER_SOFTWARE']]));
+        $tags=urlencode(json_encode(["sdk"=> "PHP Gatey SDK", "platform"=> $_SERVER['SERVER_SOFTWARE']]));
         
         if(is_null($this->client_secret)){
             $secret = '&server_secret='.urlencode($this->server_secret);
