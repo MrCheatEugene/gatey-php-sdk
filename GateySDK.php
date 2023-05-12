@@ -95,7 +95,7 @@ class GateySDK
             $exception_j=json_encode(['description'=>$exception_f,'class'=>get_class($exception), 'traceback'=> $traceback_f, 'variables'=> ['globals'=> new stdClass(), 'locals'=> new stdClass()]]);
             $exception_json="&exception=".urlencode($exception_j);
         }
-        $tags=urlencode(json_encode(["sdk"=> "PHP Gatey SDK", "platform"=> $_SERVER['SERVER_SOFTWARE']]));
+        $tags=urlencode(json_encode(["sdk"=> "PHP Gatey SDK", "platform"=> $_SERVER['SERVER_SOFTWARE'], "sdk.name"=> "Gatey Unofficial PHP Sdk"] ));
         
         if(is_null($this->client_secret)){
             $secret = '&server_secret='.urlencode($this->server_secret);
